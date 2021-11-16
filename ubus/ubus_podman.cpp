@@ -26,8 +26,17 @@ const struct blobmsg_policy podman_exec_policy[] = {
 	[PODMAN_EXEC_NAME] = { .name = "name", .type = BLOBMSG_TYPE_STRING },
 };
 
+const struct blobmsg_policy podman_logs_policy[] = {
+	[PODMAN_LOGS_NAME] = { .name = "name", .type = BLOBMSG_TYPE_STRING },
+	[PODMAN_LOGS_ID] = { .name = "id", .type = BLOBMSG_TYPE_STRING },
+};
+
 int podman_exec_policy_size(void) {
 	return ARRAY_SIZE(podman_exec_policy);
+}
+
+int podman_logs_policy_size(void) {
+	return ARRAY_SIZE(podman_logs_policy);
 }
 
 int systembus_podman_status(struct ubus_context *ctx, struct ubus_object *obj,
@@ -285,6 +294,9 @@ int systembus_podman_exec(struct ubus_context *ctx, struct ubus_object *obj,
 		return UBUS_STATUS_INVALID_ARGUMENT;
 	}
 
+	// TODO: add support for id instead of name
+	// TODO: validate that name/id exists..
+
 	Podman::Scheduler::Cmd cmd;
 
 	if ( group == PODMAN_EXEC_GROUP_POD ) {
@@ -323,6 +335,58 @@ int systembus_podman_exec(struct ubus_context *ctx, struct ubus_object *obj,
 	blobmsg_add_string(&b, "action", _action.c_str());
 	blobmsg_add_string(&b, "group", _group.c_str());
 	blobmsg_add_string(&b, "name", name.c_str());
+	ubus_send_reply(ctx, req, b.head);
+	return 0;
+}
+
+int systembus_podman_logs(struct ubus_context *ctx, struct ubus_object *obj,
+		struct ubus_request_data *req, const char *method,
+		struct blob_attr *msg) {
+
+	log::debug << APP_NAME << ": ubus call podman::logs received" << std::endl;
+
+	struct blob_attr *tb[__PODMAN_LOGS_ARGS_MAX];
+	blobmsg_parse(podman_logs_policy, ARRAY_SIZE(podman_logs_policy), tb, blob_data(msg), blob_len(msg));
+
+	std::string _id = "";
+	std::string _name = "";
+
+	if ( tb[PODMAN_LOGS_NAME] )
+		_name = common::to_lower(std::string((char*)blobmsg_data(tb[PODMAN_LOGS_NAME])));
+
+	if ( tb[PODMAN_LOGS_ID ] )
+		_id = common::to_lower(std::string((char*)blobmsg_data(tb[PODMAN_LOGS_ID])));
+
+	if ( _name.empty() && _id.empty()) {
+		log::vverbose << APP_NAME << ": ubus_podman_logs error, missing name or id" << std::endl;
+		return UBUS_STATUS_INVALID_ARGUMENT;
+	}
+
+	std::vector<std::string> logs;
+	bool valid = false;
+
+	mutex.podman.lock();
+
+	for ( const auto& pod : podman_data -> pods )
+		for ( int i = 0; i < pod.containers.size(); i++ )
+			if (( !_name.empty() && pod.containers[i].name == _name ) ||
+				( !_id.empty() && pod.containers[i].id == _id )) {
+					logs = pod.containers[i].logs;
+					valid = true;
+			}
+	mutex.podman.unlock();
+
+	if ( !valid ) {
+		std::string _identifier = _name.empty() ? ( _id.empty() ? "UNKNOWN" : _id ) : _name;
+		log::vverbose << APP_NAME << ": ubus_podman_logs error, id or name " << _identifier << " is not a valid container" << std::endl;
+		return UBUS_STATUS_INVALID_ARGUMENT;
+	}
+
+	blob_buf_init(&b, 0);
+	void *cookie = blobmsg_open_array(&b, "logs");
+	for ( const auto& entry : logs )
+		blobmsg_add_string(&b, "", entry.c_str());
+	blobmsg_close_array(&b, cookie);
 	ubus_send_reply(ctx, req, b.head);
 	return 0;
 }

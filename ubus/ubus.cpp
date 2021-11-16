@@ -18,6 +18,7 @@ static const struct ubus_method podman_methods[] = {
 	{ .name = "networks", .handler = systembus_podman_networks },
 	{ .name = "list", .handler = systembus_podman_list },
 	{ .name = "exec", .handler = systembus_podman_exec, .policy = podman_exec_policy, .n_policy = podman_exec_policy_size()},
+	{ .name = "logs", .handler = systembus_podman_logs, .policy = podman_logs_policy, .n_policy = podman_logs_policy_size()},
 };
 
 static struct ubus_object_type podman_object_type = {
