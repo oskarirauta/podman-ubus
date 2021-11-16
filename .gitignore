@@ -1,3 +1,7 @@
+# binaries
+podman-ubus
+podman_example
+
 # Prerequisites
 *.d
 
