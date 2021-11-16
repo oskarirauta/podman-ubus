@@ -3,6 +3,7 @@
 #include "podman.hpp"
 #include "mutex.hpp"
 #include "ubus.hpp"
+#include "log.hpp"
 #include "loop.hpp"
 
 bool Loop::sig_exit(void) {
@@ -59,6 +60,16 @@ void Loop::run(void) {
 	this -> sleep((int)(__delay * 0.5));
 
 	while ( !this -> sig_exit()) {
+
+		if ( podman_data -> status != Podman::PODMAN_STATUS::RUNNING ) {
+
+			log::debug << "connection to podman socket unverified." << std::endl;
+			log::vverbose << "attempting to connect to podman socket" << std::endl;
+
+			Podman::init(podman_data);
+			this -> sleep(__delay * 2);
+			continue;
+		}
 
 		podman_scheduler -> run();
 		this -> sleep(__delay);
