@@ -284,7 +284,7 @@ int systembus_podman_exec(struct ubus_context *ctx, struct ubus_object *obj,
 		std::string((char*)blobmsg_data(tb[PODMAN_EXEC_ID])) : "";
 
 	if ( name.empty() && !id.empty())
-		name = podman_data.containerNameForID(id);
+		name = podman_data -> containerNameForID(id);
 
 	if ( name.empty()) {
 		log::debug << APP_NAME << ": ubus call podman::exec received" << std::endl;
@@ -366,13 +366,14 @@ int systembus_podman_logs(struct ubus_context *ctx, struct ubus_object *obj,
 	mutex.podman.lock();
 
 	for ( const auto& pod : podman_data -> pods ) {
-		for ( const auto& cntr : pods.containers ) {
+		for ( const auto& cntr : pod.containers ) {
 
 			if (( !_name.empty() && cntr.name == _name ) ||
 				( !_id.empty() && cntr.id == _id )) {
 					logs = cntr.logs;
 					valid = true;
 					break;
+			}
 		}
 
 		if ( valid )
@@ -402,7 +403,6 @@ int systembus_podman_running(struct ubus_context *ctx, struct ubus_object *obj,
 
 	log::debug << APP_NAME << ": ubus call podman::running received" << std::endl;
 
-
 	struct blob_attr *tb[__PODMAN_ID_ARGS_MAX];
 	blobmsg_parse(podman_id_policy, ARRAY_SIZE(podman_id_policy), tb, blob_data(msg), blob_len(msg));
 
@@ -421,8 +421,9 @@ int systembus_podman_running(struct ubus_context *ctx, struct ubus_object *obj,
 	mutex.podman.lock();
 
 	for ( const auto& pod : podman_data -> pods ) {
+		std::cout << "trying pod: " << pod.name << std::endl;
 		for ( const auto& cntr : pod.containers ) {
-
+			std::cout << "trying cntr: " << cntr.name << std::endl;
 			if (( !_name.empty() && cntr.name == _name ) ||
 				( !_id.empty() && cntr.id == _id )) {
 					result = cntr.isRunning;
@@ -435,6 +436,9 @@ int systembus_podman_running(struct ubus_context *ctx, struct ubus_object *obj,
 			break;
 	}
 
+	mutex.podman.unlock();
+
+	std::cout << "search ended" << std::endl;
 	if ( !valid ) {
 		std::string _identifier = _name.empty() ? ( _id.empty() ? "UNKNOWN" : _id ) : _name;
 		log::vverbose << APP_NAME << ": ubus_podman_running error, id or name " << _identifier << " is not a valid container" << std::endl;
@@ -442,7 +446,7 @@ int systembus_podman_running(struct ubus_context *ctx, struct ubus_object *obj,
 	}
 
 	blob_buf_init(&b, 0);
-	blob_add_u8(&b, "running", result);
+	blobmsg_add_u8(&b, "running", result);
 	ubus_send_reply(ctx, req, b.head);
 	return 0;
 }
