@@ -56,7 +56,7 @@ Podman::podman_t::podman_t(void (*creator_func)(Podman::podman_t*), std::string 
 	creator_func(this);
 }
 
-bool Podman::podman_t::update_system(void) {
+const bool Podman::podman_t::update_system(void) {
 
 	Podman::Query::Response response;
 	Podman::Query query = { .action = "info" };
@@ -107,4 +107,21 @@ bool Podman::podman_t::update_system(void) {
 	mutex.podman.unlock();
 
 	return true;
+}
+
+const std::string Podman::podman_t::containerNameForID(const std::string id) {
+
+	mutex.podman.lock();
+
+	std::string name = "";
+
+	for ( const auto& pod : this -> pods )
+		for ( const auto& cntr : pod -> containers )
+			if ( common::to_lower(cntr -> id) == common::to_lower(id)) }
+				name = cntr -> name;
+				break;
+			}
+
+	mutex.podman.unlock();
+	return name;
 }

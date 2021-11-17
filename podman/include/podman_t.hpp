@@ -29,7 +29,6 @@ namespace Podman {
 				uint64_t networks = 0;
 				uint64_t pods = 0;
 				uint64_t containers = 0;
-				uint64_t stats = 0;
 			} Hashes;
 
 			typedef struct {
@@ -64,29 +63,32 @@ namespace Podman {
 			/* --- Calls --- */
 
 			// System
-			bool update_system(void);
+			const bool update_system(void);
 
 			// Network
-			bool update_networks(void);
+			const bool update_networks(void);
 
 			// Pods
-			bool update_pods(void);
-			int podIndex(std::string name);
+			const bool update_pods(void);
+			const int podIndex(std::string name);
 
 			// Containers
-			bool update_containers(void);
-			bool update_stats(void);
-			bool update_logs(void);
+			const bool update_containers(void);
+			const bool update_stats(void);
+			const bool update_logs(void);
 
 			// Commands: containers
-			bool container_stop(std::string name);
-			bool container_start(std::string name);
-			bool container_restart(std::string name);
+			const bool container_stop(std::string name);
+			const bool container_start(std::string name);
+			const bool container_restart(std::string name);
 
 			// Commands: pods
-			bool pod_stop(std::string name);
-			bool pod_start(std::string name);
-			bool pod_restart(std::string name);
+			const bool pod_stop(std::string name);
+			const bool pod_start(std::string name);
+			const bool pod_restart(std::string name);
+
+			// Helpers
+			const std::string containerNameForID(std::string name);
 
 	};
 

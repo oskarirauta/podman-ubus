@@ -7,7 +7,7 @@
 #include "podman_t.hpp"
 #include "podman_pod.hpp"
 
-Podman::Pod::Pod(std::string id, std::string name) {
+Podman::Pod::Pod(const std::string id, const std::string name) {
 
 	this -> id = id;
 	this -> name = name;
@@ -17,7 +17,7 @@ Podman::Pod::Pod(std::string id, std::string name) {
 	this -> containers = std::vector<Podman::Container>();
 }
 
-bool Podman::podman_t::update_pods(void) {
+const bool Podman::podman_t::update_pods(void) {
 
 	Podman::Query::Response response;
 	Podman::Query query = { .group = "pods", .action = "json" };
@@ -83,7 +83,7 @@ bool Podman::podman_t::update_pods(void) {
 	return true;
 }
 
-int Podman::podman_t::podIndex(std::string name) {
+const int Podman::podman_t::podIndex(const std::string name) {
 
 	std::lock_guard<std::mutex> guard(mutex.podman);
 

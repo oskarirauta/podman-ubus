@@ -19,26 +19,19 @@ enum PODMAN_EXEC_GROUP_TYPE {
 	PODMAN_EXEC_GROUP_POD,
 	PODMAN_EXEC_GROUP_CONTAINER,
 };
-
+/*
 const struct blobmsg_policy podman_exec_policy[] = {
 	[PODMAN_EXEC_ACTION] = { .name = "action", .type = BLOBMSG_TYPE_STRING },
 	[PODMAN_EXEC_GROUP] = { .name = "group", .type = BLOBMSG_TYPE_STRING },
 	[PODMAN_EXEC_NAME] = { .name = "name", .type = BLOBMSG_TYPE_STRING },
+	[PODMAN_EXEC_ID] = { .name = "id", .type = BLOBMSG_TYPE_STRING },
 };
 
-const struct blobmsg_policy podman_logs_policy[] = {
+const struct blobmsg_policy podman_id_policy[] = {
 	[PODMAN_LOGS_NAME] = { .name = "name", .type = BLOBMSG_TYPE_STRING },
 	[PODMAN_LOGS_ID] = { .name = "id", .type = BLOBMSG_TYPE_STRING },
 };
-
-int podman_exec_policy_size(void) {
-	return ARRAY_SIZE(podman_exec_policy);
-}
-
-int podman_logs_policy_size(void) {
-	return ARRAY_SIZE(podman_logs_policy);
-}
-
+*/
 int systembus_podman_status(struct ubus_context *ctx, struct ubus_object *obj,
 		struct ubus_request_data *req, const char *method,
 		struct blob_attr *msg) {
@@ -287,6 +280,11 @@ int systembus_podman_exec(struct ubus_context *ctx, struct ubus_object *obj,
 
 	std::string name = tb[PODMAN_EXEC_NAME] ?
 		std::string((char*)blobmsg_data(tb[PODMAN_EXEC_NAME])) : "";
+	std::string id = tb[PODMAN_EXEC_ID] ?
+		std::string((char*)blobmsg_data(tb[PODMAN_EXEC_ID])) : "";
+
+	if ( name.empty() && !id.empty())
+		name = podman_data.containerNameForID(id);
 
 	if ( name.empty()) {
 		log::debug << APP_NAME << ": ubus call podman::exec received" << std::endl;
@@ -345,17 +343,17 @@ int systembus_podman_logs(struct ubus_context *ctx, struct ubus_object *obj,
 
 	log::debug << APP_NAME << ": ubus call podman::logs received" << std::endl;
 
-	struct blob_attr *tb[__PODMAN_LOGS_ARGS_MAX];
-	blobmsg_parse(podman_logs_policy, ARRAY_SIZE(podman_logs_policy), tb, blob_data(msg), blob_len(msg));
+	struct blob_attr *tb[__PODMAN_ID_ARGS_MAX];
+	blobmsg_parse(podman_id_policy, ARRAY_SIZE(podman_id_policy), tb, blob_data(msg), blob_len(msg));
 
 	std::string _id = "";
 	std::string _name = "";
 
-	if ( tb[PODMAN_LOGS_NAME] )
-		_name = common::to_lower(std::string((char*)blobmsg_data(tb[PODMAN_LOGS_NAME])));
+	if ( tb[PODMAN_CONTAINER_NAME] )
+		_name = std::string((char*)blobmsg_data(tb[PODMAN_CONTAINER_NAME]));
 
-	if ( tb[PODMAN_LOGS_ID ] )
-		_id = common::to_lower(std::string((char*)blobmsg_data(tb[PODMAN_LOGS_ID])));
+	if ( tb[PODMAN_CONTAINER_ID ] )
+		_id = common::to_lower(std::string((char*)blobmsg_data(tb[PODMAN_CONTAINER_ID])));
 
 	if ( _name.empty() && _id.empty()) {
 		log::vverbose << APP_NAME << ": ubus_podman_logs error, missing name or id" << std::endl;
@@ -367,13 +365,20 @@ int systembus_podman_logs(struct ubus_context *ctx, struct ubus_object *obj,
 
 	mutex.podman.lock();
 
-	for ( const auto& pod : podman_data -> pods )
-		for ( int i = 0; i < pod.containers.size(); i++ )
-			if (( !_name.empty() && pod.containers[i].name == _name ) ||
-				( !_id.empty() && pod.containers[i].id == _id )) {
-					logs = pod.containers[i].logs;
+	for ( const auto& pod : podman_data -> pods ) {
+		for ( const auto& cntr : pods.containers ) {
+
+			if (( !_name.empty() && cntr.name == _name ) ||
+				( !_id.empty() && cntr.id == _id )) {
+					logs = cntr.logs;
 					valid = true;
-			}
+					break;
+		}
+
+		if ( valid )
+			break;
+	}
+
 	mutex.podman.unlock();
 
 	if ( !valid ) {
@@ -387,6 +392,57 @@ int systembus_podman_logs(struct ubus_context *ctx, struct ubus_object *obj,
 	for ( const auto& entry : logs )
 		blobmsg_add_string(&b, "", entry.c_str());
 	blobmsg_close_array(&b, cookie);
+	ubus_send_reply(ctx, req, b.head);
+	return 0;
+}
+
+int systembus_podman_running(struct ubus_context *ctx, struct ubus_object *obj,
+		struct ubus_request_data *req, const char *method,
+		struct blob_attr *msg) {
+
+	log::debug << APP_NAME << ": ubus call podman::running received" << std::endl;
+
+
+	struct blob_attr *tb[__PODMAN_ID_ARGS_MAX];
+	blobmsg_parse(podman_id_policy, ARRAY_SIZE(podman_id_policy), tb, blob_data(msg), blob_len(msg));
+
+	std::string _id = "";
+	std::string _name = "";
+
+	if ( tb[PODMAN_CONTAINER_NAME] )
+		_name = std::string((char*)blobmsg_data(tb[PODMAN_CONTAINER_NAME]));
+
+	if ( tb[PODMAN_CONTAINER_ID ] )
+		_id = common::to_lower(std::string((char*)blobmsg_data(tb[PODMAN_CONTAINER_ID])));
+
+	bool result = false;
+	bool valid = false;
+
+	mutex.podman.lock();
+
+	for ( const auto& pod : podman_data -> pods ) {
+		for ( const auto& cntr : pod.containers ) {
+
+			if (( !_name.empty() && cntr.name == _name ) ||
+				( !_id.empty() && cntr.id == _id )) {
+					result = cntr.isRunning;
+					valid = true;
+					break;
+			}
+		}
+
+		if ( valid )
+			break;
+	}
+
+	if ( !valid ) {
+		std::string _identifier = _name.empty() ? ( _id.empty() ? "UNKNOWN" : _id ) : _name;
+		log::vverbose << APP_NAME << ": ubus_podman_running error, id or name " << _identifier << " is not a valid container" << std::endl;
+		return UBUS_STATUS_INVALID_ARGUMENT;
+	}
+
+	blob_buf_init(&b, 0);
+	blob_add_u8(&b, "running", result);
 	ubus_send_reply(ctx, req, b.head);
 	return 0;
 }

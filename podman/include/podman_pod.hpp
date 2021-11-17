@@ -36,12 +36,12 @@ namespace Podman {
 			bool isRunning;
 			std::vector<Podman::Container> containers;
 
-			inline bool hasInfra() {
+			inline const bool hasInfra(void) {
 				std::lock_guard<std::mutex> guard(mutex.podman);
 				return this -> infraId.empty() ? false : true;
 			}
 
-			inline int indexOfInfra() {
+			inline const int indexOfInfra(void) {
 				std::lock_guard<std::mutex> guard(mutex.podman);
 				if ( this -> infraId.empty()) return -1;
 				for ( int i = 0; i < this -> containers.size(); i++ )
@@ -50,7 +50,7 @@ namespace Podman {
 				return -1;
 			}
 
-			Pod(std::string id, std::string name);
+			Pod(const std::string id, const std::string name);
 
 	};
 

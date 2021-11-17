@@ -43,7 +43,7 @@ Podman::Container::Container(std::string name, std::string id) {
 	this -> ram = Podman::Container::MemoryStats();
 }
 
-bool Podman::podman_t::update_containers(void) {
+const bool Podman::podman_t::update_containers(void) {
 
 	this -> update_pods();
 
@@ -168,23 +168,7 @@ bool Podman::podman_t::update_containers(void) {
 	return true;
 }
 
-std::string filtered_string(std::string str) {
-
-	std::string ret;
-	for (const char &c : str)
-		if ( c >= 32 && c <= 175 )
-			ret += c;
-
-	// strip non-ascii characters
-	ret.erase(std::remove_if(ret.begin(), ret.end(),
-		[](unsigned char c) {
-			return ( c == '\n' || c == '\t' ) ? false : ( c < 32 || c > 175 ? true : false );
-		}), ret.end());
-
-	return ret;
-}
-
-bool Podman::podman_t::update_stats(void) {
+const bool Podman::podman_t::update_stats(void) {
 
 	Podman::Query::Response response;
 	Podman::Query query = { .group = "containers", .action = "stats",
@@ -317,10 +301,12 @@ bool Podman::Container::update_logs(Podman::Socket *socket) {
 		return true;
 	}
 
+	/*
 	if ( !this -> isRunning ) {
 		// log::debug << "logs not updated for container " << this -> name << ", container is not running" << std::endl;
 		return true;
 	}
+	*/
 
 	if ( this -> id.empty())
 		return false;
@@ -496,7 +482,7 @@ bool Podman::Container::update_logs(Podman::Socket *socket) {
 	return true;
 }
 
-bool Podman::podman_t::update_logs(void) {
+const bool Podman::podman_t::update_logs(void) {
 
 	log::debug << "systembus: updating container logs" << std::endl;
 

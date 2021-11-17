@@ -18,7 +18,7 @@ Podman::Network::Network(std::string name, std::string version) {
 	this -> ipam = Podman::Network::Ipam();
 }
 
-bool Podman::podman_t::update_networks(void) {
+const bool Podman::podman_t::update_networks(void) {
 
 	Podman::Query::Response response;
 	Podman::Query query = { .group = "networks", .action = "json" };
