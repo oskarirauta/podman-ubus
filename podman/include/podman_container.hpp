@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "podman_busystat.hpp"
 #include "podman_socket.hpp"
 
 namespace Podman {
@@ -57,6 +58,7 @@ namespace Podman {
 			std::vector<std::string> logs;
 			Podman::Container::CpuStats cpu;
 			Podman::Container::MemoryStats ram;
+			Podman::BusyStat busyState = Podman::BusyStat::Value::NONE;
 
 			Container(std::string name, std::string id = "");
 
