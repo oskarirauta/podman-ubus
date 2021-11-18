@@ -40,7 +40,7 @@ int ubus_func_networks(struct ubus_context *ctx, struct ubus_object *obj,
 		struct ubus_request_data *req, const char *method,
 		struct blob_attr *msg);
 
-int ubus_func__list(struct ubus_context *ctx, struct ubus_object *obj,
+int ubus_func_list(struct ubus_context *ctx, struct ubus_object *obj,
                 struct ubus_request_data *req, const char *method,
                 struct blob_attr *msg);
 
