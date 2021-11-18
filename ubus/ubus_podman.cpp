@@ -416,17 +416,26 @@ int systembus_podman_running(struct ubus_context *ctx, struct ubus_object *obj,
 		_id = common::to_lower(std::string((char*)blobmsg_data(tb[PODMAN_CONTAINER_ID])));
 
 	bool result = false;
+	std::string id_type = "none";
 	bool valid = false;
 
 	mutex.podman.lock();
 
 	for ( const auto& pod : podman_data -> pods ) {
-		std::cout << "trying pod: " << pod.name << std::endl;
+
+		if (( !_name.empty() && pod.name == _name ) ||
+			( !_id.empty() && pod.id == _id )) {
+			result = pod.isRunning;
+			id_type = "pod";
+			valid = true;
+			break;
+		}
+
 		for ( const auto& cntr : pod.containers ) {
-			std::cout << "trying cntr: " << cntr.name << std::endl;
 			if (( !_name.empty() && cntr.name == _name ) ||
 				( !_id.empty() && cntr.id == _id )) {
 					result = cntr.isRunning;
+					id_type = "container";
 					valid = true;
 					break;
 			}
@@ -438,15 +447,10 @@ int systembus_podman_running(struct ubus_context *ctx, struct ubus_object *obj,
 
 	mutex.podman.unlock();
 
-	std::cout << "search ended" << std::endl;
-	if ( !valid ) {
-		std::string _identifier = _name.empty() ? ( _id.empty() ? "UNKNOWN" : _id ) : _name;
-		log::vverbose << APP_NAME << ": ubus_podman_running error, id or name " << _identifier << " is not a valid container" << std::endl;
-		return UBUS_STATUS_INVALID_ARGUMENT;
-	}
-
 	blob_buf_init(&b, 0);
 	blobmsg_add_u8(&b, "running", result);
+	blobmsg_add_u8(&b, "exists", valid);
+	blobmsg_add_string(&b, "type", id_type.c_str());
 	ubus_send_reply(ctx, req, b.head);
 	return 0;
 }
