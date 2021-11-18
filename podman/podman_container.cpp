@@ -361,9 +361,22 @@ bool Podman::Container::update_logs(Podman::Socket *socket) {
 			// clean up entry
 			std::replace(line.begin(), line.end(), '\n', ' ');
 			std::replace(line.begin(), line.end(), '\t', ' ');
-			std::replace(line.begin(), line.end(), '\"', '\'');
+			std::replace(line.begin(), line.end(), '\"', '\u0025');
+
+			std::size_t pos;
+			while (( pos = line.find("\u0025")) != std::string::npos )
+				line.replace(pos, 1, "\\\"");
+			while (( pos = line.find("\\\"\\\\\"")) != std::string::npos )
+				line.replace(pos, 5, "\\\"'");
+			while (( pos = line.find("\\\\\"\\\"")) != std::string::npos )
+				line.replace(pos, 5, "'\\\"");
+			while (( pos = line.find("\\\\\"")) != std::string::npos )
+				line.replace(pos, 3, "\u0025");
+			while (( pos = line.find("\u0025")) != std::string::npos )
+				line.replace(pos, 1, "\\\\\\\"");
+
 			if ( !line.empty())
-				lines.push_back("\"{" + line + "}\"");
+				lines.push_back("\"{" + line + "}\"\n");
 			line = "";
 			continue;
 		}
@@ -423,7 +436,19 @@ bool Podman::Container::update_logs(Podman::Socket *socket) {
 				// clean up entry
 				std::replace(entry.begin(), entry.end(), '\n', ' ');
 				std::replace(entry.begin(), entry.end(), '\t', ' ');
-				std::replace(entry.begin(), entry.end(), '\"', '\'');
+				std::replace(line.begin(), line.end(), '\"', '\u0025');
+
+				std::size_t pos;
+				while (( pos = line.find("\u0025")) != std::string::npos )
+					line.replace(pos, 1, "\\\"");
+				while (( pos = line.find("\\\"\\\\\"")) != std::string::npos )
+					line.replace(pos, 5, "\\\"'");
+				while (( pos = line.find("\\\\\"\\\"")) != std::string::npos )
+					line.replace(pos, 5, "'\\\"");
+				while (( pos = line.find("\\\\\"")) != std::string::npos )
+					line.replace(pos, 3, "\u0025");
+				while (( pos = line.find("\u0025")) != std::string::npos )
+					line.replace(pos, 1, "\\\\\\\"");
 
 				if ( !entry.empty())
 					lines.push_back("\"" + common::trim_ws(entry) + "\"");
@@ -502,13 +527,9 @@ const bool Podman::podman_t::update_logs(void) {
 				return false;
 			}
 
-	std::cout << "all container logs updated to pseudo pods, updating pods now" << std::endl;
-
 	mutex.podman.lock();
 	this -> pods = pods;
 	mutex.podman.unlock();
-
-	std::cout << "all pods updated from pseudo" << std::endl;
 
 	return true;
 }
