@@ -15,23 +15,6 @@ namespace Podman {
 
 		public:
 
-			enum BusyState : uint8_t {
-
-				none = 0,
-				starting,
-				stopping,
-				restarting
-
-			};
-
-			struct BusyStats {
-
-				bool busy = false;
-				unsigned char countdown = 0; // cycles to wait until releasing busy status even if no changes in container
-				Podman::Container::BusyState state = Podman::Container::BusyState::none;				
-
-			};
-
 			struct MemoryStats {
 				double used = 0, max = 0, free = 0, percent = 0;
 			};
