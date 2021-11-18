@@ -15,14 +15,31 @@ namespace Podman {
 
 		public:
 
-			typedef struct {
-				double used = 0, max = 0, free = 0, percent = 0;
-			} MemoryStats;
+			enum BusyState : uint8_t {
 
-			typedef struct {
+				none = 0,
+				starting,
+				stopping,
+				restarting
+
+			};
+
+			struct BusyStats {
+
+				bool busy = false;
+				unsigned char countdown = 0; // cycles to wait until releasing busy status even if no changes in container
+				Podman::Container::BusyState state = Podman::Container::BusyState::none;				
+
+			};
+
+			struct MemoryStats {
+				double used = 0, max = 0, free = 0, percent = 0;
+			};
+
+			struct CpuStats {
 				double percent = 0;
 				std::string text = "--";
-			} CpuStats;
+			};
 
 			struct find_id: std::unary_function<Podman::Container, bool> {
 				std::string id;

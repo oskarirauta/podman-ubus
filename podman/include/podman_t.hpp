@@ -12,7 +12,7 @@
 
 namespace Podman {
 
-	enum PODMAN_STATUS {
+	enum PODMAN_STATUS : uint8_t {
 		UNAVAILABLE = 0,
 		RUNNING,
 		UNKNOWN
@@ -25,18 +25,18 @@ namespace Podman {
 
 		public:
 
-			typedef struct {
+			struct Hashes {
 				uint64_t networks = 0;
 				uint64_t pods = 0;
 				uint64_t containers = 0;
-			} Hashes;
+			};
 
-			typedef struct {
+			struct States {
 				Podman::Node::State networks = Podman::Node::INCOMPLETE;
 				Podman::Node::State pods = Podman::Node::INCOMPLETE;
 				Podman::Node::State containers = Podman::Node::INCOMPLETE;
 				Podman::Node::State stats = Podman::Node::INCOMPLETE;
-			} States;
+			};
 
 			Podman::Socket socket;
 			PODMAN_STATUS status = UNKNOWN;

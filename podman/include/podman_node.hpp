@@ -4,13 +4,13 @@ namespace Podman {
 
 	namespace Node {
 
-		typedef enum {
+		enum State : uint8_t {
 			INCOMPLETE = 0,
 			NEEDS_UPDATE,
 			UNKNOWN,
 			FAILED,
 			OK
-		} State;
+		};
 
 	}
 }

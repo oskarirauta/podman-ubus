@@ -12,7 +12,7 @@ namespace Podman {
 
 		public:
 
-			enum CmdType {
+			enum CmdType : uint8_t {
 				CONTAINER_STOP = 0,
 				CONTAINER_START,
 				CONTAINER_RESTART,
@@ -26,7 +26,7 @@ namespace Podman {
 				std::string name;
 			};
 
-			enum Task {
+			enum Task : uint8_t {
 				UPDATE_CONTAINERS = 0,
 				UPDATE_STATS,
 				UPDATE_LOGS,
