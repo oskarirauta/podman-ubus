@@ -111,14 +111,17 @@ const bool Podman::podman_t::update_system(void) {
 
 const std::string Podman::podman_t::containerNameForID(const std::string id) {
 
+	if ( id.empty())
+		return "";
+
 	mutex.podman.lock();
 
 	std::string name = "";
 
 	for ( const auto& pod : this -> pods )
-		for ( const auto& cntr : pod -> containers )
-			if ( common::to_lower(cntr -> id) == common::to_lower(id)) }
-				name = cntr -> name;
+		for ( const auto& cntr : pod.containers )
+			if ( common::to_lower(cntr.id) == common::to_lower(id)) {
+				name = cntr.name;
 				break;
 			}
 
