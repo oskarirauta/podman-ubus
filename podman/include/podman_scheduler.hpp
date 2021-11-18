@@ -30,6 +30,7 @@ namespace Podman {
 				UPDATE_CONTAINERS = 0,
 				UPDATE_STATS,
 				UPDATE_LOGS,
+				UPDATE_BUSY_CYCLES,
 				__UPDATE_MAX__
 			};
 

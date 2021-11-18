@@ -81,6 +81,9 @@ void Podman::Scheduler::run(void) {
 		case Podman::Scheduler::Task::UPDATE_LOGS:
 			this -> podman -> update_logs();
 			break;
+		case Podman::Scheduler::Task::UPDATE_BUSY_CYCLES:
+			this -> podman -> update_busy_cycles();
+			break;
 	}
 
 	this -> next_task++;

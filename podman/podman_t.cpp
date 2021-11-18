@@ -3,6 +3,7 @@
 #include <json/json.h>
 
 #include "common.hpp"
+#include "constants.hpp"
 #include "podman_network.hpp"
 #include "podman_query.hpp"
 #include "podman_socket.hpp"
@@ -114,17 +115,83 @@ const std::string Podman::podman_t::containerNameForID(const std::string id) {
 	if ( id.empty())
 		return "";
 
-	mutex.podman.lock();
-
+	bool done = false;
 	std::string name = "";
 
-	for ( const auto& pod : this -> pods )
-		for ( const auto& cntr : pod.containers )
+	mutex.podman.lock();
+
+	for ( const auto& pod : this -> pods ) {
+
+		for ( const auto& cntr : pod.containers ) {
+
 			if ( common::to_lower(cntr.id) == common::to_lower(id)) {
 				name = cntr.name;
+				done = true;
 				break;
 			}
+		}
+
+		if ( done )
+			break;
+	}
 
 	mutex.podman.unlock();
 	return name;
+}
+
+const bool Podman::podman_t::setContainerBusyState(const std::string name, Podman::BusyStat::Value state) {
+
+	if ( name.empty())
+		return false;
+
+	bool done = false;
+
+	mutex.podman.lock();
+	for ( int podI = 0; podI < this -> pods.size(); podI++ ) {
+
+		for ( int idx = 0; idx < this -> pods[podI].containers.size(); idx++ ) {
+
+			if ( this -> pods[podI].containers[idx].name == name ) {
+				this -> pods[podI].containers[idx].busyState = state;
+				// log::debug << APP_NAME << ": container " << this -> pods[podI].containers[idx].name << " state is now: ";
+				// log::debug << this -> pods[podI].containers[idx].busyState.description() << std::endl;
+				done = true;
+				break;
+			}
+		}
+
+		if ( done )
+			break;
+	}
+
+	mutex.podman.unlock();
+	return done;
+}
+
+const bool Podman::podman_t::resetContainerBusyState(const std::string name) {
+
+	if ( name.empty())
+		return false;
+
+	bool done = false;
+
+	mutex.podman.lock();
+	for ( int podI = 0; podI < this -> pods.size(); podI++ ) {
+
+		for ( int idx = 0; idx < this -> pods[podI].containers.size(); idx++ ) {
+
+			if ( this -> pods[podI].containers[idx].name == name ) {
+				this -> pods[podI].containers[idx].busyState.reset();
+				done = true;
+				break;
+			}
+		}
+
+		if ( done )
+			break;
+
+	}
+
+	mutex.podman.unlock();
+	return done;
 }

@@ -1,9 +1,10 @@
 #pragma once
 
 #include <map>
+#include <string>
 
 #ifndef BUSY_COUNTDOWN_CYCLES
-#define BUSY_COUNTDOWN_CYCLES 3
+#define BUSY_COUNTDOWN_CYCLES 5
 #endif
 
 namespace Podman {
@@ -42,6 +43,10 @@ namespace Podman {
 				if ( Podman::BusyStat::Description.count(this -> value))
 					return Podman::BusyStat::Description.at(this -> value);
 				else return "Unknown busy state description";
+			}
+
+			inline bool state(void) const {
+				return this -> value != Podman::BusyStat::Value::NONE;
 			}
 
 			inline void reset(void) {

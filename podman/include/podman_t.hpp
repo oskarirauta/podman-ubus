@@ -77,6 +77,9 @@ namespace Podman {
 			const bool update_stats(void);
 			const bool update_logs(void);
 
+			// Global
+			const bool update_busy_cycles(void);
+
 			// Commands: containers
 			const bool container_stop(const std::string name);
 			const bool container_start(const std::string name);
@@ -89,7 +92,8 @@ namespace Podman {
 
 			// Helpers
 			const std::string containerNameForID(const std::string id);
-
+			const bool setContainerBusyState(const std::string name, Podman::BusyStat::Value state);
+			const bool resetContainerBusyState(const std::string name);
 	};
 
 }

@@ -1,5 +1,6 @@
 #include <string>
 
+#include "podman_busystat.hpp"
 #include "podman_query.hpp"
 #include "podman_socket.hpp"
 #include "podman_t.hpp"

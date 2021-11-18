@@ -5,6 +5,7 @@
 #include "log.hpp"
 #include "podman.hpp"
 #include "mutex.hpp"
+#include "podman_busystat.hpp"
 #include "ubus_podman.hpp"
 
 enum PODMAN_EXEC_ACTION_TYPE {
@@ -170,6 +171,11 @@ int ubus_func_list(struct ubus_context *ctx, struct ubus_object *obj,
 			blobmsg_add_string(&b, "status", container.status.c_str());
 			blobmsg_add_string(&b, "started", common::time_str(container.startedAt).c_str());
 
+			void *cookie5 = blobmsg_open_table(&b, "busy");
+			blobmsg_add_u8(&b, "state", container.busyState.state());
+			blobmsg_add_string(&b, "reason", container.busyState.description().c_str());
+			blobmsg_close_table(&b, cookie5);
+
 			std::time_t uptime = container.uptime;
 			int d = uptime > 86400 ? uptime / 86400 : 0;
 			if ( d != 0 ) uptime -= d * 86400;
@@ -178,24 +184,24 @@ int ubus_func_list(struct ubus_context *ctx, struct ubus_object *obj,
 			int m = uptime > 60 ? uptime / 60 : 0;
 			if ( m != 0 ) uptime -= m * 60;
 
-			void *cookie5 = blobmsg_open_table(&b, "uptime");
+			void *cookie6 = blobmsg_open_table(&b, "uptime");
 			blobmsg_add_u16(&b, "days", d);
 			blobmsg_add_u16(&b, "hours", h);
 			blobmsg_add_u16(&b, "minutes", m);
 			blobmsg_add_u16(&b, "seconds", (int)uptime);
-			blobmsg_close_table(&b, cookie5);
-
-			void *cookie6 = blobmsg_open_table(&b, "cpu");
-			blobmsg_add_string(&b, "load", container.cpu.text.c_str());
-			blobmsg_add_u16(&b, "percent", (int)container.cpu.percent);
 			blobmsg_close_table(&b, cookie6);
 
-			void *cookie7 = blobmsg_open_table(&b, "ram");
+			void *cookie7 = blobmsg_open_table(&b, "cpu");
+			blobmsg_add_string(&b, "load", container.cpu.text.c_str());
+			blobmsg_add_u16(&b, "percent", (int)container.cpu.percent);
+			blobmsg_close_table(&b, cookie7);
+
+			void *cookie8 = blobmsg_open_table(&b, "ram");
 			blobmsg_add_string(&b, "used", common::memToStr(container.ram.used, true).c_str());
 			blobmsg_add_string(&b, "free", common::memToStr(container.ram.free, true).c_str());
 			blobmsg_add_string(&b, "max", common::memToStr(container.ram.max, true).c_str());
 			blobmsg_add_u16(&b, "percent", container.ram.percent);
-			blobmsg_close_table(&b, cookie7);
+			blobmsg_close_table(&b, cookie8);
 
 			if ( !container.isInfra ) {
 
@@ -209,18 +215,18 @@ int ubus_func_list(struct ubus_context *ctx, struct ubus_object *obj,
 					canRestart = false;
 				}
 
-				void *cookie8 = blobmsg_open_table(&b, "actions");
+				void *cookie9 = blobmsg_open_table(&b, "actions");
 				blobmsg_add_u8(&b, "start", canStart);
 				blobmsg_add_u8(&b, "stop", canStop);
 				blobmsg_add_u8(&b, "restart", canRestart);
-				blobmsg_close_table(&b, cookie8);
+				blobmsg_close_table(&b, cookie9);
 			} else {
 
-				void *cookie8 = blobmsg_open_table(&b, "actions");
+				void *cookie9 = blobmsg_open_table(&b, "actions");
 				blobmsg_add_u8(&b, "start", false);
 				blobmsg_add_u8(&b, "stop", false);
 				blobmsg_add_u8(&b, "restart", false);
-				blobmsg_close_table(&b, cookie8);
+				blobmsg_close_table(&b, cookie9);
 			}
 
 			blobmsg_close_table(&b, cookie4);
@@ -293,12 +299,16 @@ int ubus_func_exec(struct ubus_context *ctx, struct ubus_object *obj,
 		else if ( action == PODMAN_EXEC_ACTION_RESTART )
 			cmd.type = Podman::Scheduler::CmdType::POD_RESTART;
 	} else if ( group == PODMAN_EXEC_GROUP_CONTAINER ) {
-		if ( action == PODMAN_EXEC_ACTION_STOP )
+		if ( action == PODMAN_EXEC_ACTION_STOP ) {
+			podman_data -> setContainerBusyState(name, Podman::BusyStat::Value::STOPPING);
 			cmd.type = Podman::Scheduler::CmdType::CONTAINER_STOP;
-		else if ( action == PODMAN_EXEC_ACTION_START )
+		} else if ( action == PODMAN_EXEC_ACTION_START ) {
+			podman_data -> setContainerBusyState(name, Podman::BusyStat::Value::STARTING);
 			cmd.type = Podman::Scheduler::CmdType::CONTAINER_START;
-		else if ( action == PODMAN_EXEC_ACTION_RESTART )
+		} else if ( action == PODMAN_EXEC_ACTION_RESTART ) {
+			podman_data -> setContainerBusyState(name, Podman::BusyStat::Value::RESTARTING);
 			cmd.type = Podman::Scheduler::CmdType::CONTAINER_RESTART;
+		}
 	}
 
 	cmd.name = name;

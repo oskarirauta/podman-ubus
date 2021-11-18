@@ -10,6 +10,7 @@
 #include "podman_t.hpp"
 #include "podman_node.hpp"
 #include "podman_query.hpp"
+#include "podman_pseudo_container.hpp"
 #include "podman_container.hpp"
 
 const bool get_firstline(const std::string s, std::string &line) {
@@ -73,13 +74,19 @@ const bool Podman::podman_t::update_containers(void) {
 		return true;
 	}
 
-	mutex.podman.unlock();
-
 	if ( !response.json.isArray()) {
+		mutex.podman.unlock();
 		log::verbose << "failed to call: " << common::trim_leading(query.path()) << std::endl;
 		log::vverbose << "error: json result is not array" << std::endl;
 		return false;	
 	}
+
+	std::vector<Podman::Pseudo::Container> cntrs;
+	for ( const auto& pod: this -> pods )
+		for ( const auto& cntr : pod.containers )
+			cntrs.push_back(Podman::Pseudo::Container(cntr));
+
+	mutex.podman.unlock();
 
 	std::vector<Podman::Container> containers;
 
@@ -138,6 +145,18 @@ const bool Podman::podman_t::update_containers(void) {
 
 		container.uptime = now - container.startedAt < 0 ? 0 : now - container.startedAt;
 
+		for ( auto& cntr : cntrs ) // retain previous internal container data
+			if ( cntr.id == container.id ) {
+
+				container.logs = cntr.logs;
+				container.ram = cntr.ram;
+				container.cpu = cntr.cpu;
+				container.busyState = cntr.busyState;
+
+				if ( cntr.stateChanged(container))
+					container.busyState.reset();
+			}
+
 		containers.push_back(container);
 	}
 
@@ -153,13 +172,18 @@ const bool Podman::podman_t::update_containers(void) {
 			continue;
 
 		if ( ind == -1 ) noname.containers.push_back(containers[i]);
-		else this -> pods[ind].containers.push_back(containers[i]);
+		else {
+			mutex.podman.lock();
+			this -> pods[ind].containers.push_back(containers[i]);
+			mutex.podman.unlock();
+		}
 	};
+
+	mutex.podman.lock();
 
 	if ( !noname.containers.empty())
 		this -> pods.push_back(noname);
 
-	mutex.podman.lock();
 	this -> hash.containers = hashValue;
 	this -> state.pods = Podman::Node::OK;
 	this -> state.containers = Podman::Node::OK;

@@ -16,7 +16,7 @@ SHARED_OBJS:=objs/common.o objs/log.o
 PODMAN_OBJS:= \
 	objs/podman_query.o objs/podman_socket.o objs/podman_validate.o \
 	objs/podman_network.o objs/podman_pod.o objs/podman_container.o \
-	objs/podman_cmds.o objs/podman_scheduler.o \
+	objs/podman_cmds.o objs/podman_scheduler.o objs/podman_busystat.o \
 	objs/podman_t.o
 
 UBUS_OBJS:= \
@@ -74,6 +74,9 @@ objs/podman_t.o: podman/podman_t.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
 
 objs/podman_scheduler.o: podman/podman_scheduler.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
+
+objs/podman_busystat.o: podman/podman_busystat.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c -o $@ $<;
 
 objs/ubus.o: ubus/ubus.cpp
