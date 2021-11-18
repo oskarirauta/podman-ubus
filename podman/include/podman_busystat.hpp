@@ -4,7 +4,7 @@
 #include <string>
 
 #ifndef BUSY_COUNTDOWN_CYCLES
-#define BUSY_COUNTDOWN_CYCLES 5
+#define BUSY_COUNTDOWN_CYCLES 4
 #endif
 
 namespace Podman {
