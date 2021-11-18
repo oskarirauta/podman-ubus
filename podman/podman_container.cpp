@@ -179,8 +179,6 @@ const bool Podman::podman_t::update_stats(void) {
 		return false;
 	}
 
-	log::vverbose << "systembus: updating podman stats" << std::endl;
-
 	if ( !this -> socket.execute(query, response))
 		return false;
 
@@ -190,16 +188,7 @@ const bool Podman::podman_t::update_stats(void) {
 		return false;
 	}
 
-
-	uint64_t hashValue = response.hash();
-
 	mutex.podman.lock();
-
-	if ( hashValue == this -> hash.stats ) {
-		mutex.podman.unlock();
-		return true;
-	}
-
 	std::vector<Podman::Pod> pods = this -> pods;
 	mutex.podman.unlock();
 
@@ -286,7 +275,6 @@ const bool Podman::podman_t::update_stats(void) {
 		return false;
 
 	mutex.podman.lock();
-	this -> hash.stats = hashValue;
 	this -> state.stats = Podman::Node::OK;
 	this -> pods = pods;
 	mutex.podman.unlock();
@@ -508,8 +496,6 @@ bool Podman::Container::update_logs(Podman::Socket *socket) {
 }
 
 const bool Podman::podman_t::update_logs(void) {
-
-	log::debug << "systembus: updating container logs" << std::endl;
 
 	if ( this -> state.containers != Podman::Node::OK ) {
 		log::vverbose << "error: failed to update logs, container array not ready" << std::endl;

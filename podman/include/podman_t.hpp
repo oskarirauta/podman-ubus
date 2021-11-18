@@ -29,7 +29,6 @@ namespace Podman {
 				uint64_t networks = 0;
 				uint64_t pods = 0;
 				uint64_t containers = 0;
-				uint64_t stats = 0;
 			} Hashes;
 
 			typedef struct {

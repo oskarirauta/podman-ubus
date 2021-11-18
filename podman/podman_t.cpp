@@ -25,7 +25,7 @@ Podman::podman_t::podman_t(std::string socket_path) {
 
 	this -> hash.networks = 0;
 	this -> hash.pods = 0;
-	this -> hash.stats = 0;
+	this -> hash.containers = 0;
 
 	socket.timeout = Podman::API_TIMEOUT;
 	if ( socket_path != Podman::API_SOCKET )
@@ -47,7 +47,7 @@ Podman::podman_t::podman_t(void (*creator_func)(Podman::podman_t*), std::string 
 
 	this -> hash.networks = 0;
 	this -> hash.pods = 0;
-	this -> hash.stats = 0;
+	this -> hash.containers = 0;
 
 	socket.timeout = Podman::API_TIMEOUT;
 	if ( socket_path != Podman::API_SOCKET )
