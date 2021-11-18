@@ -13,13 +13,13 @@ struct ubus_context *ctx;
 struct blob_buf b;
 
 static const struct ubus_method podman_methods[] = {
-	{ .name = "status", .handler = systembus_podman_status },
-	{ .name = "info", .handler = systembus_podman_info },
-	{ .name = "networks", .handler = systembus_podman_networks },
-	{ .name = "list", .handler = systembus_podman_list },
-	{ .name = "exec", .handler = systembus_podman_exec, .policy = podman_exec_policy, .n_policy = ARRAY_SIZE(podman_exec_policy) },
-	{ .name = "logs", .handler = systembus_podman_logs, .policy = podman_id_policy, .n_policy = ARRAY_SIZE(podman_id_policy) },
-	{ .name = "running", .handler = systembus_podman_running, .policy = podman_id_policy, n_policy = ARRAY_SIZE(podman_id_policy) }
+	{ .name = "status", .handler = ubus_func_status },
+	{ .name = "info", .handler = ubus_func_info },
+	{ .name = "networks", .handler = ubus_func_networks },
+	{ .name = "list", .handler = ubus_func_list },
+	{ .name = "exec", .handler = ubus_func_exec, .policy = podman_exec_policy, .n_policy = ARRAY_SIZE(podman_exec_policy) },
+	{ .name = "logs", .handler = ubus_func_logs, .policy = podman_id_policy, .n_policy = ARRAY_SIZE(podman_id_policy) },
+	{ .name = "running", .handler = ubus_func_running, .policy = podman_id_policy, .n_policy = ARRAY_SIZE(podman_id_policy) }
 };
 
 static struct ubus_object_type podman_object_type = {
