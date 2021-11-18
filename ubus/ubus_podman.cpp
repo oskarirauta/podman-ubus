@@ -205,9 +205,9 @@ int ubus_func_list(struct ubus_context *ctx, struct ubus_object *obj,
 
 			if ( !container.isInfra ) {
 
-				bool canStart = !container.isRunning;
-				bool canStop = !canStart;
-				bool canRestart = canStop;
+				bool canStart = container.busy.state() ? false : !container.isRunning;
+				bool canStop = container.busy.state() ? false : !canStart;
+				bool canRestart = container.busy.state() ? false : canStop;
 
 				if ( indexOfInfra != -1 && ( !pod.isRunning || !pod.containers[indexOfInfra].isRunning )) {
 					canStart = false;
