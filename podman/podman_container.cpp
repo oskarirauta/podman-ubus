@@ -143,7 +143,7 @@ const bool Podman::podman_t::update_containers(void) {
 		time_t now = std::chrono::duration_cast<std::chrono::seconds>
 			(std::chrono::system_clock::now().time_since_epoch()).count();
 
-		container.uptime = now - container.startedAt < 0 ? 0 : now - container.startedAt;
+		container.uptime = ( now - container.startedAt < 0 ) ? 0 : ( now - container.startedAt );
 
 		for ( auto& cntr : cntrs ) // retain previous internal container data
 			if ( cntr.id == container.id || cntr.name == container.name ) {
