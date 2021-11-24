@@ -3,6 +3,7 @@ all: podman-ubus
 CXX?=g++
 CXXFLAGS?=--std=c++17
 #-ggdb
+# For debugging
 
 OBJS:= \
 	objs/loop.o \
@@ -27,8 +28,10 @@ PODMAN_EXAMPLE_OBJS:= \
 
 LIBS:=
 
-#UBUS_LIBS:=-lubox -lblobmsg_json -lubus -luci
-UBUS_LIBS:=/usr/lib/libubox.a /usr/lib/libblobmsg_json.a /usr/lib/libuci.a -lubus
+# for cross-compiler:
+UBUS_LIBS:=-lubox -lblobmsg_json -luci -lubus
+# for native:
+#UBUS_LIBS:=/usr/lib/libubox.a /usr/lib/libblobmsg_json.a /usr/lib/libuci.a -lubus
 
 JSON_LIBS:=-ljsoncpp
 
