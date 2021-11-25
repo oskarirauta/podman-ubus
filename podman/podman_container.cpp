@@ -157,7 +157,7 @@ const bool Podman::podman_t::update_containers(void) {
 				container.logs = cntr.logs;
 				container.ram = cntr.ram;
 				container.cpu = cntr.cpu;
-				container.busyState = cntr.busyState;
+				container.busyState = container.isRestarting ? Podman::BusyStat::Value::RESTARTING : cntr.busyState;
 
 				if ( cntr.stateChanged(container))
 					container.busyState.reset();
