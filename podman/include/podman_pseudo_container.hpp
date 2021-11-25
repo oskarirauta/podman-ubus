@@ -18,8 +18,8 @@ namespace Podman {
 				std::string name;
 
 				bool isRunning;
+				bool isRestarting;
 				std::string state;
-				std::string status;
 
 				std::vector<std::string> logs;
 				Podman::Container::CpuStats cpu;
@@ -31,8 +31,8 @@ namespace Podman {
 					this -> id = cntr.id;
 					this -> name = cntr.name;
 					this -> isRunning = cntr.isRunning;
+					this -> isRestarting = cntr.isRestarting;
 					this -> state = cntr.state;
-					this -> status = cntr.status;
 					this -> logs = cntr.logs;
 					this -> cpu = cntr.cpu;
 					this -> ram = cntr.ram;
@@ -43,7 +43,7 @@ namespace Podman {
 
 					return ( this -> isRunning != cntr.isRunning ||
 						this -> state != cntr.state ||
-						this -> status != cntr.status ) ? true : false;
+						( this -> isRestarting != cntr.isRestarting && cntr.isRestarting )) ? true : false;
 				}
 
 		};

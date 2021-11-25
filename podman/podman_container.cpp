@@ -33,9 +33,9 @@ Podman::Container::Container(std::string name, std::string id) {
 	this -> pod = "";
 	this -> isInfra = false;
 	this -> isRunning = false;
+	this -> isRestarting = false;
 	this -> pid = -1;
 	this -> state = "";
-	this -> status = "";
 	this -> startedAt = 0;
 	this -> uptime = 0;
 	this -> pids = std::vector<pid_t>();
@@ -134,8 +134,14 @@ const bool Podman::podman_t::update_containers(void) {
 
 		container.isRunning = common::to_lower(container.state) == "running" ? true : false;
 
-		container.status = response.json[i]["Status"].isString() ?
-			response.json[i]["Status"].asString() : "";
+		if (( response.json[i]["Paused"].isBool() ?
+			response.json[i]["Paused"].asBool() : false)) {
+			container.isRunning = false;
+			container.state = "paused";
+		}
+
+		container.isRestarting = response.json[i]["Restarting"].isBool() ?
+			response.json[i]["Restarting"].asBool() : false;
 
 		container.startedAt = response.json[i]["StartedAt"].isUInt64() ?
 			response.json[i]["StartedAt"].asUInt64() : 0;

@@ -166,9 +166,9 @@ int ubus_func_list(struct ubus_context *ctx, struct ubus_object *obj,
 			blobmsg_add_u8(&b, "infra", container.isInfra);
 			blobmsg_add_string(&b, "pod", container.pod.c_str());
 			blobmsg_add_u8(&b, "running", container.isRunning);
+			blobmsg_add_u8(&b, "restarting", container.isRestarting);
 			blobmsg_add_u32(&b, "pid", container.pid);
 			blobmsg_add_string(&b, "state", container.state.c_str());
-			blobmsg_add_string(&b, "status", container.status.c_str());
 			blobmsg_add_string(&b, "started", common::time_str(container.startedAt).c_str());
 
 			void *cookie5 = blobmsg_open_table(&b, "busy");

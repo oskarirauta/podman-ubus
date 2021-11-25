@@ -48,9 +48,9 @@ namespace Podman {
 			std::string pod;
 			bool isInfra = false;
 			bool isRunning = false;
+			bool isRestarting = false;
 			pid_t pid;
 			std::string state;
-			std::string status;
 			std::time_t startedAt;
 			std::time_t uptime;
 			std::vector<pid_t> pids;
