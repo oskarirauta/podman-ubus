@@ -29,9 +29,9 @@ PODMAN_EXAMPLE_OBJS:= \
 LIBS:=
 
 # for cross-compiler:
-UBUS_LIBS:=-lubox -lblobmsg_json -luci -lubus
+#UBUS_LIBS:=-lubox -lblobmsg_json -luci -lubus
 # for native:
-#UBUS_LIBS:=/usr/lib/libubox.a /usr/lib/libblobmsg_json.a /usr/lib/libuci.a -lubus
+UBUS_LIBS:=/usr/lib/libubox.a /usr/lib/libblobmsg_json.a /usr/lib/libuci.a /usr/lib/libubus.a
 
 JSON_LIBS:=-ljsoncpp
 
