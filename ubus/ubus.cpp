@@ -10,7 +10,9 @@
 
 std::string ubus_socket = "";
 struct ubus_context *ctx;
-//struct blob_buf b;
+#ifndef b
+struct blob_buf b;
+#endif
 
 static const struct ubus_method podman_methods[] = {
 	{ .name = "status", .handler = ubus_func_status },
