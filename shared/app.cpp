@@ -9,6 +9,7 @@
 #include "app.hpp"
 
 std::string libpod_version_override;
+bool log_trace = false;
 
 void version_info(void) {
 	std::cout << APP_NAME << " version " << APP_VERSION;
@@ -27,6 +28,7 @@ void usage(char* cmd) {
 	std::cout << "   -v, --verbose       verbose output\n";
 	std::cout << "   -vv                 more verbose output\n";
 	std::cout << "   --debug             maximum verbose output\n";
+	std::cout << "   --trace             debug level log output with json result output\n";
 	std::cout << std::endl;
 }
 
@@ -58,6 +60,12 @@ void parse_cmdline(int argc, char **argv) {
 				exit(-1);
 			}
 			log_level = 4;
+		} else if (( *i == "-trace" || *i == "--trace" ) && log_level < 5 ) {
+			if ( log_level < 0 ) {
+				std::cout << "error: quiet and debug/trace logging cannot be used at same time." << std::endl;
+				exit(-1);
+			}
+			log_level = 5;
 		} else if ( *i == "--only-errors" && log_level < 1 ) {
 			if ( log_level < 0 ) {
 				std::cout << "error: quiet and error-only logging cannot be used at same time." << std::endl;
@@ -155,6 +163,9 @@ void parse_cmdline(int argc, char **argv) {
 
 		if ( log_level > 3 )
 			log::output_level[log::debug] = true;
+
+		if ( log_level > 4 )
+			log_trace = true;
 	}
 
 }
