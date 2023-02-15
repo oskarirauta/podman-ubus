@@ -117,5 +117,8 @@ podman-ubus: $(DEPS) $(SHARED_OBJS) $(OBJS) $(PODMAN_OBJS) $(UBUS_OBJS)
 podman_example: $(DEPS) $(SHARED_OBJS) $(PODMAN_OBJS) $(PODMAN_EXAMPLE_OBJS)
 	$(CXX) $(CXXFLAGS) $(EXTRA_CXXFLAGS) $(LDFLAGS) $(SHARED_OBJS) $(PODMAN_OBJS) $(PODMAN_EXAMPLE_OBJS) $(CURL_LIBS) $(JSON_LIBS) -o $@;
 
-clean: curl-clean
+clean:
 	rm -f objs/** podman-ubus podman_example
+
+distclean: curl-clean clean
+dist-clean: curl-clean clean
