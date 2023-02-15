@@ -22,6 +22,7 @@
 #include "common.hpp"
 #include "mutex.hpp"
 #include "log.hpp"
+#include "app.hpp"
 #include "podman_error.hpp"
 #include "podman_query.hpp"
 #include "podman_socket.hpp"
@@ -133,6 +134,9 @@ bool Podman::Socket::execute(Podman::Query query, Podman::Query::Response &respo
 	long response_code;
 	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 	response.code = (int)response_code;
+
+	if ( log_trace )
+		std::cout << "data from socket, code: " << response.code << "\n" << response.body << "\n" << std::endl;
 
 	if ( response.body.length() != 0 ) {
 
