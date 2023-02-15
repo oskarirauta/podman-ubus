@@ -4,6 +4,7 @@
 #include <map>
 #include <json/json.h>
 
+#include "app.hpp"
 #include "common.hpp"
 #include "podman_constants.hpp"
 
@@ -33,27 +34,20 @@ namespace Podman {
 				);
 			}
 
-			inline const std::string request(void) {
+			inline const std::string url(void) {
 
 				std::string path = this -> path();
 				if ( path.empty()) return "";
 
-				std::string header = ( this -> method.empty() ? "GET": this -> method ) + " ";
-				header += Podman::API_VERSION.empty() ? "" : ( "/" + Podman::API_VERSION );
-				header += Podman::API_PATH.empty() ? "" : ( "/" + Podman::API_PATH );
-				header += path + " " + ( Podman::API_PROTOCOL.empty() ? "HTTP/1.1" : Podman::API_PROTOCOL ) + "\r\n";
+				std::string d = std::string("d");
 
-				header += "Host: " + ( Podman::API_HOST.empty() ? "localhost" : Podman::API_HOST ) + "\r\n";
-				header += "User-Agent: " + ( Podman::API_USERAGENT.empty() ? "podmancli" : Podman::API_USERAGENT ) + "\r\n";
-				header += "Connection: close\r\n";
+				if ( !libpod_version_override.empty())
+					d += "/" + libpod_version_override;
+				else d += Podman::API_VERSION.empty() ? "" : ( "/" + Podman::API_VERSION );
+				d += Podman::API_PATH.empty() ? "" : ( "/" + Podman::API_PATH );
+				d += path;
 
-				if ( !this -> body.empty()) {
-					if ( !this -> mime.empty())
-						header += "Content-Type: " + this -> mime + "\r\n";
-					header += "Content-Length: " + std::to_string(this -> body.length()) + "\r\n";
-				}
-
-				return header + "\r\n";
+				return d;
 			}
 
 		struct Response {
@@ -61,9 +55,9 @@ namespace Podman {
 			std::string error_msg = "";
 			int code = -1;
 
-			std::string protocol = "";
-			std::string status = "";
-			std::map<std::string, std::string> headers;
+			int chunks = 0;
+			int chunks_allowed = 0;
+			bool chunks_to_array = false;
 			std::string body = "";
 			std::string raw = "";
 			Json::Value json;
@@ -91,9 +85,9 @@ namespace Podman {
 				this -> error_msg = "";
 				this -> code = -1;
 
-				this -> protocol = "";
-				this -> status = "";
-				this -> headers.clear();
+				this -> chunks = 0;
+				this -> chunks_allowed = 0;
+				this -> chunks_to_array = false;
 				this -> body = "";
 				this -> raw = "";
 			}
