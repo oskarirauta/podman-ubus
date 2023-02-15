@@ -8,7 +8,7 @@ bool Podman::verifyJsonElements(Json::Value jsondata, std::vector<std::string> n
 		if ( !jsondata.isMember(*it)) {
 			if ( query != NULL )
 				log::verbose << "failed to call: " << common::trim_leading(query -> path()) << std::endl;
-			log::vverbose << "error: json element mismatch" << std::endl;
+			log::vverbose << "error: json element mismatch for element \"" << *it << "\"" << std::endl;
 			return false;
 		}
 
