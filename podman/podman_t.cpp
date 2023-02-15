@@ -96,6 +96,7 @@ const bool Podman::podman_t::update_system(void) {
 		this -> status = RUNNING;
 
 	} else if ( !Podman::verifyJsonElements(response.json, { "host" }, &query)) {
+
 		mutex.podman.unlock();
 		log::verbose << "failed to call " << query.path() << std::endl;
 		log::vverbose << "error: json element mismatch" << std::endl;
