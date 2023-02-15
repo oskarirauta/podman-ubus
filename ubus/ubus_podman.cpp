@@ -89,10 +89,7 @@ int ubus_func_networks(struct ubus_context *ctx, struct ubus_object *obj,
 	for ( const auto& network : podman_data -> networks ) {
 		void *cookie2 = blobmsg_open_table(&b, "");
 		blobmsg_add_string(&b, "name", network.name.c_str());
-		blobmsg_add_string(&b, "cni_version", network.version.c_str());
 		blobmsg_add_string(&b, "type", network.type.c_str());
-		blobmsg_add_u8(&b, "gateway", network.isGateway);
-		blobmsg_add_string(&b, "plugins", network.plugins.c_str());
 
 		void *cookie3 = blobmsg_open_table(&b, "ipam");
 		blobmsg_add_string(&b, "type", network.ipam.type.c_str());
@@ -105,11 +102,6 @@ int ubus_func_networks(struct ubus_context *ctx, struct ubus_object *obj,
 			blobmsg_close_table(&b, cookie5);
 		}
 		blobmsg_close_array(&b, cookie4);
-
-		void *cookie6 = blobmsg_open_array(&b, "routes");
-		for ( const auto& route : network.ipam.routes )
-			blobmsg_add_string(&b, "", route.c_str());
-		blobmsg_close_array(&b, cookie6);
 		blobmsg_close_table(&b, cookie3);
 		blobmsg_close_table(&b, cookie2);
 	}

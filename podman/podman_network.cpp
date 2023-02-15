@@ -8,13 +8,10 @@
 #include "podman_t.hpp"
 #include "podman_network.hpp"
 
-Podman::Network::Network(std::string name, std::string version) {
+Podman::Network::Network(std::string name) {
 
 	this -> name = name;
-	this -> version = version;
-	this -> plugins = "";
 	this -> type = "";
-	this -> isGateway = false;
 	this -> ipam = Podman::Network::Ipam();
 }
 
@@ -43,25 +40,21 @@ const bool Podman::podman_t::update_networks(void) {
 	if ( !response.json.isArray()) {
 		log::verbose << "failed to call: " << common::trim_leading(query.path()) << std::endl;
 		log::vverbose << "error: json result is not array" << std::endl;
-		return false;	
+		return false;
 	}
 
 	std::vector<Podman::Network> networks;
 
 	for ( int i = 0; i < response.json.size(); i++ ) {
 
-		if (( !response.json[i]["Name"].isString()) ||
-			( !response.json[i]["CNIVersion"].isString()))
-				continue;
+		if ( !response.json[i]["name"].isString()) continue;
 
-		Podman::Network network(response.json[i]["Name"].asString(),
-			response.json[i]["CNIVersion"].asString());
+		Podman::Network network(response.json[i]["name"].asString());
 
-		network.type = response.json[i]["Plugins"][0]["Network"]["type"].asString();
-		network.ipam.type = response.json[i]["Plugins"][0]["Network"]["ipam"]["type"].asString();
-		network.plugins = "";
+		network.type = response.json[i]["driver"].asString();
+		network.ipam.type = response.json[i]["ipam_options"]["driver"].asString();
 
-		if (( !network.name.empty()) && ( !network.version.empty()))
+		if ( !network.name.empty())
 			networks.push_back(network);
 	}
 
@@ -73,16 +66,16 @@ const bool Podman::podman_t::update_networks(void) {
 		if ( !socket.execute(query2, response2))
 			continue;
 
-		if ( response2.json["plugins"][0]["ipam"]["ranges"].isArray()) {
-		
+		if ( response2.json["subnets"].isArray()) {
+
 			std::vector<Podman::Network::Range> ranges;
 
-			for ( int i2 = 0; i2 < response2.json["plugins"][0]["ipam"]["ranges"].size(); i2++ ) {
+			for ( int i2 = 0; i2 < response2.json["subnets"].size(); i2++ ) {
 
 				Podman::Network::Range range;
 
-				range.gateway = response2.json["plugins"][0]["ipam"]["ranges"][i2][0]["gateway"].asString();
-				range.subnet = response2.json["plugins"][0]["ipam"]["ranges"][i2][0]["subnet"].asString();
+				range.gateway = response2.json["subnets"][i2]["gateway"].asString();
+				range.subnet = response2.json["subnets"][i2]["subnet"].asString();
 
 				if ( range.gateway.empty() && range.subnet.empty())
 					continue;
@@ -92,29 +85,6 @@ const bool Podman::podman_t::update_networks(void) {
 
 			networks[i].ipam.ranges = ranges;
 		}
-
-		if ( response2.json["plugins"][0]["ipam"]["routes"].isArray()) {
-
-			std::vector<std::string> routes;
-
-			for ( int i2 = 0; i2 < response2.json["plugins"][0]["ipam"]["routes"].size(); i2++ ) {
-
-				std::string route = response2.json["plugins"][0]["ipam"]["routes"][i2]["dst"].asString();
-				if ( !route.empty())
-					routes.push_back(route);				
-			}
-
-			networks[i].ipam.routes = routes;
-		}
-
-		networks[i].isGateway = response2.json["plugins"][0]["isGateway"].asBool();
-
-		if ( response2.json["plugins"].size() > 1 )
-			for ( int i2 = 1; i2 < response2.json["plugins"].size(); i2++ ) {
-				std::string plugin = response2.json["plugins"][i2]["type"].asString();
-				if ( plugin.empty()) continue;
-				networks[i].plugins += ( i2 != 1 ? "," : "" ) + plugin;
-			}
 
 	}
 

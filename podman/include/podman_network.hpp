@@ -16,7 +16,6 @@ namespace Podman {
 
 			struct Ipam {
 				std::vector<Podman::Network::Range> ranges;
-				std::vector<std::string> routes;
 				std::string type;
 			};
 
@@ -29,13 +28,10 @@ namespace Podman {
 			};
 
 			std::string name;
-			std::string version;
-			std::string plugins;
 			std::string type;
-			bool isGateway;
 
 			Podman::Network::Ipam ipam;
-			Network(std::string name, std::string version);
+			Network(std::string name);
 
 	};
 
