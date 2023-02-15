@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <string>
 #include <thread>
 
 #include "constants.hpp"
@@ -8,6 +7,8 @@
 #include "loop.hpp"
 #include "ubus.hpp"
 #include "app.hpp"
+
+std::string libpod_version_override;
 
 void version_info(void) {
 	std::cout << APP_NAME << " version " << APP_VERSION;
@@ -19,6 +20,7 @@ void usage(char* cmd) {
 	std::cout << "   -h, --h             show this help\n";
 	std::cout << "   --version           show version\n";
 	std::cout << "   -s, --socket path   connect to specified ubus socket\n";
+	std::cout << "   -l v4.0.0           force libpod version\n";
 	std::cout << "   --interval ms       set interval for cpu load refreshing(default: " << DEFAULT_DELAY << "ms)\n";
 	std::cout << "   -q, --quiet         silence output\n";
 	std::cout << "   --only-errors       output only errors\n";
@@ -76,6 +78,34 @@ void parse_cmdline(int argc, char **argv) {
 				std::cout << "error: socket's path not given for " << this_arg << " option." << std::endl;
 				exit(-1);
 			}
+
+			if ( ubus_socket.size() > 1 && ubus_socket.front() == '"' && ubus_socket.back() == '"' ) {
+				ubus_socket.erase(0, 1);
+				ubus_socket.erase(ubus_socket.size() - 1);
+			}
+
+			if ( ubus_socket.empty()) {
+				std::cout << "error: socket's path not given for " << this_arg << " option." << std::endl;
+				exit(-1);
+			}
+
+		} else if ( *i == "-l" || *i == "--l" || *i == "--libpod" || *i == "--libpod-version" ) {
+			std::string this_arg = *i;
+			std::string _version;
+			if ( std::next(i) != args.end())
+				_version = *++i;
+			else {
+				std::cout << "error: libpod override version not defined for " << this_arg << " option." << std::endl;
+				exit(-1);
+			}
+
+			if ( _version.size() > 1 && _version.front() == '"' && _version.back() == '"' ) {
+				_version.erase(0, 1);
+				_version.erase(_version.size() - 1);
+			}
+
+			libpod_version_override = _version;
+
 		} else if ( *i == "-interval" || *i == "--interval" ) {
 			std::string this_arg = *i;
 			if ( std::next(i) != args.end()) {
