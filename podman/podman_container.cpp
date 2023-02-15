@@ -49,8 +49,11 @@ const bool Podman::podman_t::update_containers(void) {
 	this -> update_pods();
 
 	mutex.podman.lock();
-	if ( this -> state.containers != Podman::Node::INCOMPLETE ||
-		this -> state.pods == Podman::Node::INCOMPLETE ) {
+
+	if (( this -> state.containers != Podman::Node::INCOMPLETE &&
+			this -> state.containers != Podman::Node::NEEDS_UPDATE ) || (
+			this -> state.pods == Podman::Node::INCOMPLETE ||
+			this -> state.pods == Podman::Node::NEEDS_UPDATE )) {
 		mutex.podman.unlock();
 		return false;
 	}
@@ -78,7 +81,7 @@ const bool Podman::podman_t::update_containers(void) {
 		mutex.podman.unlock();
 		log::verbose << "failed to call: " << common::trim_leading(query.path()) << std::endl;
 		log::vverbose << "error: json result is not array" << std::endl;
-		return false;	
+		return false;
 	}
 
 	std::vector<Podman::Pseudo::Container> cntrs;
@@ -166,8 +169,8 @@ const bool Podman::podman_t::update_containers(void) {
 		containers.push_back(container);
 	}
 
-	if ( containers.empty())
-		return false;
+	//if ( containers.empty())
+	//	return false;
 
 	Podman::Pod noname("", "");
 

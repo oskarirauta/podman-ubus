@@ -37,7 +37,7 @@ const bool Podman::podman_t::update_pods(void) {
 	if ( !response.json.isArray()) {
 		log::verbose << "failed to call: " << common::trim_leading(query.path()) << std::endl;
 		log::vverbose << "error: json result is not array" << std::endl;
-		return false;	
+		return false;
 	}
 
 	std::vector<Podman::Pod> pods;
@@ -68,17 +68,15 @@ const bool Podman::podman_t::update_pods(void) {
 		pods.push_back(pod);
 	}
 
-	if ( pods.empty()) {
-		log::vverbose << "pods array was empty" << std::endl;
-		return false;
-	}
-
 	mutex.podman.lock();
 	this -> pods = pods;
-	this -> hash.pods = hashValue;
+	this -> hash.pods = pods.empty() ? 0 : hashValue;
 	this -> state.pods = Podman::Node::OK;
-	this -> state.containers = Podman::Node::INCOMPLETE;
+	this -> state.containers = this -> state.containers == Podman::Node::INCOMPLETE : Podman::Node::INCOMPLETE : Podman::Node::NEEDS_UPDATE;
 	mutex.podman.unlock();
+
+	if ( pods.empty())
+		log::debug << "pods array was empty" << std::endl;
 
 	return true;
 }
