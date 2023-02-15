@@ -17,10 +17,10 @@ void freedata(void) {
 
 int main(int argc, char **argv) {
 
+	parse_cmdline(argc, argv);
+
 	podman_data = new Podman::podman_t(Podman::init);
 	podman_scheduler = new Podman::Scheduler(podman_data);
-
-	parse_cmdline(argc, argv);
 
 	uloop_init();
 	ctx = ubus_connect(ubus_socket == "" ? NULL : ubus_socket.c_str());
