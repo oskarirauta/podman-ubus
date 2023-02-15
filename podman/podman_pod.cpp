@@ -30,6 +30,7 @@ const bool Podman::podman_t::update_pods(void) {
 	if ( hashValue == this -> hash.pods ) {
 		mutex.podman.lock();
 		this -> state.pods == Podman::Node::OK;
+		this -> state.containers == Podman::Node::NEEDS_UPDATE;
 		mutex.podman.unlock();
 		return true;
 	}
