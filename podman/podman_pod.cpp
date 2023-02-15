@@ -72,7 +72,10 @@ const bool Podman::podman_t::update_pods(void) {
 	this -> pods = pods;
 	this -> hash.pods = pods.empty() ? 0 : hashValue;
 	this -> state.pods = Podman::Node::OK;
-	this -> state.containers = this -> state.containers == Podman::Node::INCOMPLETE : Podman::Node::INCOMPLETE : Podman::Node::NEEDS_UPDATE;
+
+	if ( !this -> state.containers == Podman::Node::INCOMPLETE )
+		this -> state.containers = Podman::Node::NEEDS_UPDATE;
+
 	mutex.podman.unlock();
 
 	if ( pods.empty())
