@@ -18,7 +18,8 @@ CURL_CONFIGURE_FLAGS:= \
 		--without-amissl --without-ssl --without-zlib --without-brotli --without-zstd \
 		--without-gssapi --without-ca-bundle --without-libpsl --without-libgsasl \
 		--without-libssh2 --without-libssh --without-wolfssh --without-librtmp \
-		--without-winidn --without-libidn2 --without-quiche --without-msh3 \
+		--without-winidn --without-libidn2 --without-nghttp2 --without-ngtcpp2 \
+		--without-nghttp3 --without-quiche --without-msh3 \
 		--without-zsh-functions-dir --without-fish-functions-dir
 
 CURL_LIBS:=$(CURL_PATH)/inst/usr/lib/libcurl.a
@@ -26,7 +27,7 @@ CURL_INCLUDES:=-I$(CURL_PATH)/inst/usr/include
 
 $(CURL_PATH)/curl-config:
 	cd $(CURL_PATH); \
-	CFLAGS=$(CFLAGS) CXXFLAGS=$(CXXFLAGS) CPPFLAGS=$(CPPFLAGS) CPP=$(CPP) $(CONFIGURE_VARS) ./configure $(CONFIGURE_ARGS) $(CURL_CONFIGURE_FLAGS); \
+	CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" CPPFLAGS="$(CPPFLAGS)" CPP="$(CPP)" $(CONFIGURE_VARS) ./configure $(CONFIGURE_ARGS) $(CURL_CONFIGURE_FLAGS); \
 	mkdir inst ; \
 	sed -i 's#DIST_SUBDIRS = \$$(SUBDIRS) tests packages scripts include docs#DIST_SUBDIRS = \$$(SUBDIRS) packages scripts include#g' Makefile; \
 	sed -i 's#cd docs && \$$(MAKE) install#echo not-installing-docs#g' Makefile; \
@@ -37,7 +38,7 @@ $(CURL_PATH)/curl-config:
 
 $(CURL_LIBS): $(CURL_PATH)/curl-config
 	$(MAKE_VARS) $(MAKE) -C $(CURL_PATH) $(MAKE_FLAGS)
-	$(MAKE_VARS) DESTDIR=$(PWD)/$(CURL_PATH)/inst $(MAKE) -C $(CURL_PATH) $(MAKE_FLAGS) install
+	$(MAKE_VARS) DESTDIR="$(BUILD_DIR)/$(CURL_PATH)/inst" $(MAKE) -C $(CURL_PATH) $(MAKE_FLAGS) install
 
 $(CURL_INCLUDES): $(CURL_LIBS)
 

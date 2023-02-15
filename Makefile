@@ -26,6 +26,8 @@ UBUS_OBJS:= \
 PODMAN_EXAMPLE_OBJS:= \
 	objs/mutex.o objs/podman_signal.o objs/podman_dump.o objs/podman_main.o
 
+BUILD_DIR?=$(PWD)
+
 include Makefile.curl
 
 LIBS:=
