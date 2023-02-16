@@ -41,13 +41,17 @@ static size_t receiveCallback(void *contents, size_t size, size_t nmemb, void *r
 	Podman::Query::Response *ptr = (Podman::Query::Response*)response;
 
 	ptr -> raw += data;
+	ptr -> chunks++;
+
+	if ( log_trace && ptr -> chunks_allowed != 0 )
+		log::debug << "received chunk #" << ptr -> chunks << std::endl;
 
 	if ( ptr -> chunks_to_array )
-		ptr -> body += std::string( ptr -> chunks == 0 ? "[" : "," ) + data;
+		ptr -> body += std::string( ptr -> chunks == 1 ? "[" : "," ) + data;
 	else ptr -> body += data;
 
 	if ( ptr -> chunks_allowed > 0 && ptr -> chunks >= ptr -> chunks_allowed ) {
-		ptr -> body + "]";
+		ptr -> body += "]";
 		return 0;
 	}
 
@@ -63,6 +67,7 @@ bool Podman::Socket::execute(Podman::Query query, Podman::Query::Response &respo
 
 	if ( !this -> curl ) {
 		this -> error = Podman::Error::SOCKET_UNAVAILABLE;
+		log::vverbose << "error with socket when querying " << common::trim_leading(query.path()) << ": socket not available" << std::endl;
 		return false;
 	}
 
@@ -73,7 +78,7 @@ bool Podman::Socket::execute(Podman::Query query, Podman::Query::Response &respo
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, receiveCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&response);
-	curl_easy_setopt(curl, CURLOPT_TIMEOUT, this -> timeout);
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, common::trim_leading(query.path()) == "containers/stats" ? 25 : this -> timeout);
 
 	CURLcode res = curl_easy_perform(curl);
 
@@ -128,6 +133,7 @@ bool Podman::Socket::execute(Podman::Query query, Podman::Query::Response &respo
 				this -> error.setExtended("curl_easy_perform() failed: " + std::string(curl_easy_strerror(res)));
 		}
 
+		log::vverbose << "socket failed with error while querying for " << common::trim_leading(query.path()) << ": " << this -> error.description() << std::endl;
 		return false;
 	}
 
@@ -150,7 +156,7 @@ bool Podman::Socket::execute(Podman::Query query, Podman::Query::Response &respo
 		}
 
 		return true;
-	}
+	} else log::vverbose << "received response from socket had size of 0, received nothing for query " << common::trim_leading(query.path()) << std::endl;
 
 	return false;
 }

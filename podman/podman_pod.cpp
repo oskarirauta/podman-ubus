@@ -70,6 +70,22 @@ const bool Podman::podman_t::update_pods(void) {
 	}
 
 	mutex.podman.lock();
+
+	// retain noname pod
+	for ( int idx = 0; idx < this -> pods.size(); idx++ )
+		if ( this -> pods[idx].name == "" && this -> pods[idx].id == "" ) {
+
+			std::cout << "found noname pod" << std::endl;
+			Podman::Pod noname("", "");
+			for ( int cid = 0; cid < this -> pods[idx].containers.size(); cid++ )
+				noname.containers.push_back(this -> pods[idx].containers[cid]);
+
+
+			if ( !noname.containers.empty())
+				pods.push_back(noname);
+			break;
+		}
+
 	this -> pods = pods;
 	this -> hash.pods = pods.empty() ? 0 : hashValue;
 	this -> state.pods = Podman::Node::OK;
@@ -77,10 +93,12 @@ const bool Podman::podman_t::update_pods(void) {
 	if ( !this -> state.containers == Podman::Node::INCOMPLETE )
 		this -> state.containers = Podman::Node::NEEDS_UPDATE;
 
-	mutex.podman.unlock();
-
-	if ( pods.empty())
+	if ( pods.empty()) {
+		this -> hash.containers = 0;
 		log::debug << "pods array was empty" << std::endl;
+	}
+
+	mutex.podman.unlock();
 
 	return true;
 }

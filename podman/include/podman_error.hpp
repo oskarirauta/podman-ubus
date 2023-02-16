@@ -83,7 +83,7 @@ namespace Podman {
 				{ SOCKET_CLOSED_EARLY, "socket stream closed too early" },
 				{ SOCKET_SEND_TIMEOUT, "socket send timed out" },
 				{ SOCKET_READ_TIMEOUT, "socket read timed out" },
-				{ SOCKET_UNKNOWN_ERROR, "unknown error with socker" },
+				{ SOCKET_UNKNOWN_ERROR, "undescribed error with socket" },
 				{ PROTOCOL_INVALID, "invalid protocol" },
 				{ PROTOCOL_MISMATCH, "protocol did not validate" },
 				{ CONTENT_SIZE_INVALID, "content size is invalid" },

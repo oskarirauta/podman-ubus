@@ -55,6 +55,7 @@ const bool Podman::podman_t::update_containers(void) {
 			this -> state.pods == Podman::Node::INCOMPLETE ||
 			this -> state.pods == Podman::Node::NEEDS_UPDATE )) {
 		mutex.podman.unlock();
+		log::debug << "did not update containers, states says no need to" << std::endl;
 		return false;
 	}
 
@@ -65,6 +66,7 @@ const bool Podman::podman_t::update_containers(void) {
 
 	if ( !socket.execute(query, response)) {
 		this -> state.containers = Podman::Node::INCOMPLETE;
+		log::debug << "update containers failed, containers array state set to incomplete" << std::endl;
 		return false;
 	}
 
@@ -73,7 +75,10 @@ const bool Podman::podman_t::update_containers(void) {
 	mutex.podman.lock();
 
 	if ( hashValue == this -> hash.containers ) {
+		this -> state.pods = Podman::Node::OK;
+		this -> state.containers = Podman::Node::OK;
 		mutex.podman.unlock();
+		log::debug << "container state hash remained the same, success, but container array not updated" << std::endl;
 		return true;
 	}
 
@@ -154,6 +159,7 @@ const bool Podman::podman_t::update_containers(void) {
 
 		container.uptime = ( now - container.startedAt < 0 ) ? 0 : ( now - container.startedAt );
 
+		bool retained = false;
 		for ( auto& cntr : cntrs ) // retain previous internal container data
 			if ( cntr.id == container.id || cntr.name == container.name ) {
 
@@ -164,10 +170,20 @@ const bool Podman::podman_t::update_containers(void) {
 
 				if ( cntr.stateChanged(container))
 					container.busyState.reset();
+
+				retained = true;
 			}
+
+		if ( !retained )
+			log::debug << "failed to retain stats for container id " << container.id << "(" << container.name << ") - container is new?" << std::endl;
 
 		containers.push_back(container);
 	}
+
+	log::debug << "previous container count was " << cntrs.size() << std::endl;
+
+	if ( containers.empty())
+		log::vverbose << "container array is empty" << std::endl;
 
 	//if ( containers.empty())
 	//	return false;
@@ -186,7 +202,7 @@ const bool Podman::podman_t::update_containers(void) {
 			this -> pods[ind].containers.push_back(containers[i]);
 			mutex.podman.unlock();
 		}
-	};
+	}
 
 	mutex.podman.lock();
 
@@ -204,7 +220,7 @@ const bool Podman::podman_t::update_containers(void) {
 const bool Podman::podman_t::update_stats(void) {
 
 	Podman::Query::Response response;
-	Podman::Query query = { .group = "containers", .action = "stats",
+	Podman::Query query = { .group = "containers", .action = "stats", .query = "interval=2",
 			.chunks_allowed = 2, .chunks_to_array = true };
 
 	if ( this -> state.containers != Podman::Node::OK ) {
@@ -212,8 +228,10 @@ const bool Podman::podman_t::update_stats(void) {
 		return false;
 	}
 
-	if ( !this -> socket.execute(query, response))
+	if ( !this -> socket.execute(query, response)) {
+		log::verbose << "error: socket connection failure" << std::endl;
 		return false;
+	}
 
 	if ( !response.json[1]["Stats"].isArray()) {
 		log::verbose << "failed to call: " << common::trim_leading(query.path()) << std::endl;
@@ -304,8 +322,8 @@ const bool Podman::podman_t::update_stats(void) {
 		}
 	}
 
-	if ( pods.empty())
-		return false;
+	//if ( pods.empty())
+	//	return false;
 
 	mutex.podman.lock();
 	this -> state.stats = Podman::Node::OK;
