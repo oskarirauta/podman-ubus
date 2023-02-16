@@ -34,3 +34,7 @@ podman_example
 *.exe
 *.out
 *.app
+
+curl-7.87.0/Makefile
+curl-7.87.0/src/Makefile
+curl-7.87.0/src/Makefile.am
