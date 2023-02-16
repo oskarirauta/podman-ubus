@@ -18,7 +18,7 @@ CURL_CONFIGURE_FLAGS:= \
 		--without-amissl --without-ssl --without-zlib --without-brotli --without-zstd \
 		--without-gssapi --without-ca-bundle --without-libpsl --without-libgsasl \
 		--without-libssh2 --without-libssh --without-wolfssh --without-librtmp \
-		--without-winidn --without-libidn2 --without-nghttp2 --without-ngtcpp2 \
+		--without-winidn --without-libidn2 --without-nghttp2 --without-ngtcp2 \
 		--without-nghttp3 --without-quiche --without-msh3 \
 		--without-zsh-functions-dir --without-fish-functions-dir
 
