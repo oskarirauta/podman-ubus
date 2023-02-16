@@ -25,7 +25,10 @@ CURL_CONFIGURE_FLAGS:= \
 CURL_LIBS:=$(CURL_PATH)/inst/usr/lib/libcurl.a
 CURL_INCLUDES:=-I$(CURL_PATH)/inst/usr/include
 
-$(CURL_PATH)/curl-config:
+$(CURL_PATH)/configure:
+	tar xfz $(BUILD_DIR)/dl/curl-$(CURL_VERSION).tar.gz -C $(BUILD_DIR)
+
+$(CURL_PATH)/curl-config: $(CURL_PATH)/configure
 	cd $(CURL_PATH); \
 	CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" CPPFLAGS="$(CPPFLAGS)" CPP="$(CPP)" $(CONFIGURE_VARS) ./configure $(CONFIGURE_ARGS) $(CURL_CONFIGURE_FLAGS); \
 	mkdir inst ; \
